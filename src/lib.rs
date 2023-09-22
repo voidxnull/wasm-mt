@@ -228,17 +228,19 @@ macro_rules! exec_js_async { ($th:expr, $str:expr) => (($th).exec_js_async($str)
 
 pub struct WasmMt {
     pkg_js_uri: Option<String>,
+    pkg_wasm_uri: Option<String>,
     ab_init: RefCell<Option<ArrayBuffer>>,
     ab_wasm: RefCell<Option<ArrayBuffer>>,
     is_initialized: RefCell<bool>,
 }
 
 impl WasmMt {
-    pub fn new(pkg_js_uri: &str) -> Self {
+    pub fn new(pkg_js_uri: &str, pkg_wasm_uri: &str) -> Self {
         debug_ln!("pkg_js_uri: {}", pkg_js_uri);
 
         Self {
             pkg_js_uri: Some(String::from(pkg_js_uri)),
+            pkg_wasm_uri: Some(String::from(pkg_wasm_uri)),
             ab_init: RefCell::new(None),
             ab_wasm: RefCell::new(None),
             is_initialized: RefCell::new(false),
@@ -250,6 +252,7 @@ impl WasmMt {
 
         Self {
             pkg_js_uri: None,
+            pkg_wasm_uri: None,
             ab_init: RefCell::new(Some(ab_init)),
             ab_wasm: RefCell::new(Some(ab_wasm)),
             is_initialized: RefCell::new(false),
@@ -274,12 +277,14 @@ impl WasmMt {
                 format!("{}_bg.wasm", pkg_js_uri)
             } else {
                 self.set_ab_init(Self::create_ab_init(pkg_js_uri).await?);
-                pkg_js_uri.replace(".js", "_bg.wasm")
-            };
 
-            if !pkg_wasm_uri.ends_with("_bg.wasm") {
-                wasm_bindgen::throw_str("failed to resolve `pkg_wasm_uri`");
-            }
+                if let Some(ref pkg_wasm_uri) = self.pkg_wasm_uri {
+                    pkg_wasm_uri.to_string()
+                } else {
+                    debug_ln!("init(): `pkg_wasm_uri` is `None`");
+                    pkg_js_uri.replace(".js", ".wasm")
+                }
+            };
 
             self.set_ab_wasm(utils::fetch_as_arraybuffer(&pkg_wasm_uri).await?);
         } else {

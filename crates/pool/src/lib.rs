@@ -107,11 +107,11 @@ struct ThreadPoolInner {
 }
 
 impl ThreadPoolInner {
-    fn new(size: usize, pkg_js_uri: &str) -> Self {
+    fn new(size: usize, pkg_js_uri: &str, pkg_wasm_uri: &str) -> Self {
         assert!(size > 0);
         Self {
             size,
-            mt: WasmMt::new(pkg_js_uri),
+            mt: WasmMt::new(pkg_js_uri, pkg_wasm_uri),
             threads: RefCell::new(Vec::with_capacity(size)),
             resolver: Resolver::new(),
         }
@@ -216,8 +216,8 @@ impl Drop for ThreadPool {
 }
 
 impl ThreadPool {
-    pub fn new(size: usize, pkg_js_uri: &str) -> Self {
-        Self(Rc::new(ThreadPoolInner::new(size, pkg_js_uri)))
+    pub fn new(size: usize, pkg_js_uri: &str, pkg_wasm_uri: &str) -> Self {
+        Self(Rc::new(ThreadPoolInner::new(size, pkg_js_uri, pkg_wasm_uri)))
     }
 
     pub fn new_with_arraybuffers(size: usize, ab_js: ArrayBuffer, ab_wasm: ArrayBuffer) -> Self {
